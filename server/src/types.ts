@@ -50,7 +50,9 @@ export interface Room {
   members: Member[];
   players: Player[];     // actual squad — overwritten by API when available
   teams: { [userId: string]: TeamSelection };
-  scores: { [playerId: string]: PlayerStats };
+  scores: { [playerId: string]: PlayerStats };     // combined inn1+inn2, used by leaderboard
+  inn1Scores: { [playerId: string]: PlayerStats }; // innings 1 raw data
+  inn2Scores: { [playerId: string]: PlayerStats }; // innings 2 raw data
   locked: boolean;
   createdAt: string;
 }

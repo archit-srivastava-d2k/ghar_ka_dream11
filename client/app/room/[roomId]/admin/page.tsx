@@ -39,10 +39,10 @@ export default function AdminScores() {
   const [autoPollStatus, setAutoPollStatus] = useState('');
 
   // JSON scorecard
-  const [jsonInput, setJsonInput]   = useState('');
-  const [jsonMsg, setJsonMsg]       = useState('');
+  const [jsonInput, setJsonInput]     = useState('');
+  const [jsonMsg, setJsonMsg]         = useState('');
   const [jsonLoading, setJsonLoading] = useState(false);
-  const [mergeMode, setMergeMode]   = useState(false);
+  const [innings, setInnings]         = useState<1 | 2>(1);
 
   // Guard: only admin
   useEffect(() => {
@@ -146,7 +146,7 @@ export default function AdminScores() {
       const res  = await fetch(`${SERVER}/api/rooms/${roomId}/score-from-json`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adminId: user.adminId, matchData, merge: mergeMode }),
+        body: JSON.stringify({ adminId: user.adminId, matchData, innings }),
       });
       const data = await res.json();
       if (!res.ok) { setJsonMsg(`❌ ${data.error ?? 'Server error'}`); return; }
@@ -260,7 +260,7 @@ export default function AdminScores() {
           📋 Paste Match JSON
         </h2>
         <p className="text-xs text-gray-400 mb-3">
-          Paste the innings JSON (batting + bowling) and hit Calculate. Do it twice for both innings using Merge mode.
+          Paste innings JSON and hit Calculate. Select which innings this data belongs to — you can re-upload any innings anytime without double-counting.
         </p>
 
         <textarea
@@ -273,18 +273,21 @@ export default function AdminScores() {
         />
 
         <div className="flex items-center justify-between mt-2 gap-2">
-          {/* Merge toggle */}
-          <label className="flex items-center gap-2 cursor-pointer select-none">
+          {/* Innings selector */}
+          <div className="flex rounded-lg overflow-hidden border border-gray-700 flex-shrink-0">
             <button
-              onClick={() => setMergeMode(m => !m)}
-              className={`w-10 h-6 rounded-full transition-all relative flex-shrink-0 ${mergeMode ? 'bg-purple-600' : 'bg-gray-700'}`}
+              onClick={() => setInnings(1)}
+              className={`px-3 py-1.5 text-xs font-semibold transition-all ${innings === 1 ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
             >
-              <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${mergeMode ? 'left-4' : 'left-0.5'}`} />
+              Innings 1
             </button>
-            <span className="text-xs text-gray-400">
-              {mergeMode ? '➕ Merge (2nd innings)' : '🔄 Replace (1st innings)'}
-            </span>
-          </label>
+            <button
+              onClick={() => setInnings(2)}
+              className={`px-3 py-1.5 text-xs font-semibold transition-all ${innings === 2 ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+            >
+              Innings 2
+            </button>
+          </div>
 
           <button
             onClick={handleJsonScore}

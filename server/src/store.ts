@@ -65,6 +65,8 @@ export function createRoom(
     players:    getPlayersForMatch(team1, team2), // static fallback; overwritten by API squad
     teams:      {},
     scores:     {},
+    inn1Scores: {},
+    inn2Scores: {},
     locked:     false,
     createdAt:  new Date().toISOString(),
   };
@@ -114,6 +116,58 @@ export function updateScores(
   room.scores = { ...room.scores, ...scores };
   saveRooms();
   return room;
+}
+
+/**
+ * Store per-innings scores. Each call fully replaces that innings' data (safe to call
+ * multiple times mid-innings). Combined scores are recalculated automatically.
+ */
+export function updateInnScores(
+  roomId: string,
+  innings: 1 | 2,
+  scores: { [playerId: string]: PlayerStats }
+): Room | null {
+  const room = rooms.get(roomId);
+  if (!room) return null;
+  if (innings === 1) room.inn1Scores = scores;
+  else               room.inn2Scores = scores;
+  room.scores = combineInnings(room.inn1Scores, room.inn2Scores);
+  saveRooms();
+  return room;
+}
+
+function combineInnings(
+  inn1: { [pid: string]: PlayerStats },
+  inn2: { [pid: string]: PlayerStats }
+): { [pid: string]: PlayerStats } {
+  const combined: { [pid: string]: PlayerStats } = {};
+  const allPids = new Set([...Object.keys(inn1), ...Object.keys(inn2)]);
+  for (const pid of allPids) {
+    const s1 = inn1[pid];
+    const s2 = inn2[pid];
+    if (s1 && s2) {
+      combined[pid] = {
+        runs:           s1.runs           + s2.runs,
+        ballsFaced:     s1.ballsFaced     + s2.ballsFaced,
+        fours:          s1.fours          + s2.fours,
+        sixes:          s1.sixes          + s2.sixes,
+        isOut:          s1.isOut          || s2.isOut,
+        wickets:        s1.wickets        + s2.wickets,
+        oversBowled:    s1.oversBowled    + s2.oversBowled,
+        runsConceded:   s1.runsConceded   + s2.runsConceded,
+        maidens:        s1.maidens        + s2.maidens,
+        lbwBowledCount: s1.lbwBowledCount + s2.lbwBowledCount,
+        catches:        s1.catches        + s2.catches,
+        stumpings:      s1.stumpings      + s2.stumpings,
+        runoutDirect:   s1.runoutDirect   + s2.runoutDirect,
+        runoutIndirect: s1.runoutIndirect + s2.runoutIndirect,
+        playingXI:      s1.playingXI      || s2.playingXI,
+      };
+    } else {
+      combined[pid] = { ...(s1 ?? s2) };
+    }
+  }
+  return combined;
 }
 
 /** Called after API squad fetch — replaces static player list with actual match squad */

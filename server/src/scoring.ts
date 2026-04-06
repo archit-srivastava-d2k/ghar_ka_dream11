@@ -5,7 +5,7 @@ const RULES = {
   playing:  { inPlayingXI: 4 },
   batting: {
     perRun: 1, perFour: 1, perSix: 2,
-    milestone25: 4, milestone50: 8, milestone100: 16,
+    milestone30: 4, milestone50: 8, milestone100: 16,
     duck: -2,
     strikeRate: {
       minBalls: 10,
@@ -41,7 +41,7 @@ export function calculateBasePoints(stats: PlayerStats): number {
   pts += stats.sixes * RULES.batting.perSix;
   if      (stats.runs >= 100) pts += RULES.batting.milestone100;
   else if (stats.runs >= 50)  pts += RULES.batting.milestone50;
-  else if (stats.runs >= 25)  pts += RULES.batting.milestone25;
+  else if (stats.runs >= 30)  pts += RULES.batting.milestone30;
   if (stats.isOut && stats.runs === 0 && stats.ballsFaced > 0) pts += RULES.batting.duck;
 
   if (stats.ballsFaced >= RULES.batting.strikeRate.minBalls) {

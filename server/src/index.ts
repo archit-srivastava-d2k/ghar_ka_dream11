@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   createRoom, getRoom, getRoomByCode,
   addMember, submitTeam, lockRoom,
-  updateScores, updateRoomPlayers,
+  updateScores, updateInnScores, updateRoomPlayers,
 } from './store';
 import { buildLeaderboard } from './scoring';
 import { IPL_TEAMS } from './players';
@@ -147,49 +147,25 @@ app.post('/api/rooms/:roomId/fetch-scores', async (req, res) => {
 
 /**
  * POST /api/rooms/:roomId/score-from-json
- * Admin pastes/uploads a match JSON → parses stats → scores update live.
- * Body: { adminId, matchData, merge? }
- * matchData is the innings JSON (batting[], bowling[], did_not_bat[])
- * merge=true accumulates on top of existing scores (for 2nd innings)
+ * Admin pastes innings JSON → parses stats → scores update live.
+ * Body: { adminId, matchData, innings: 1 | 2 }
+ * Each call fully replaces that innings' data — safe to call multiple times.
+ * Combined leaderboard = inn1 + inn2 automatically.
  */
 app.post('/api/rooms/:roomId/score-from-json', (req, res) => {
-  const { adminId, matchData, merge = false } = req.body;
+  const { adminId, matchData, innings = 1 } = req.body;
   const room = getRoom(req.params.roomId);
 
   if (!room)    return res.status(404).json({ error: 'Room not found' });
   if (room.adminId !== adminId) return res.status(403).json({ error: 'Only admin can update scores' });
   if (!matchData) return res.status(400).json({ error: 'matchData is required' });
+  if (innings !== 1 && innings !== 2) return res.status(400).json({ error: 'innings must be 1 or 2' });
 
   try {
     const scorecard = parseMatchJSON(matchData);
-    let mapped = autoMapStats(scorecard, room.players);
+    const mapped    = autoMapStats(scorecard, room.players);
+    const updated   = updateInnScores(room.id, innings as 1 | 2, mapped);
 
-    // Merge mode: accumulate stats on top of existing (for 2nd innings)
-    if (merge && Object.keys(room.scores).length > 0) {
-      for (const [pid, s] of Object.entries(mapped)) {
-        const existing = room.scores[pid];
-        if (!existing) continue;
-        mapped[pid] = {
-          runs:          existing.runs          + s.runs,
-          ballsFaced:    existing.ballsFaced    + s.ballsFaced,
-          fours:         existing.fours         + s.fours,
-          sixes:         existing.sixes         + s.sixes,
-          isOut:         s.isOut || existing.isOut,
-          wickets:       existing.wickets       + s.wickets,
-          oversBowled:   existing.oversBowled   + s.oversBowled,
-          runsConceded:  existing.runsConceded  + s.runsConceded,
-          maidens:       existing.maidens       + s.maidens,
-          lbwBowledCount:existing.lbwBowledCount+ s.lbwBowledCount,
-          catches:       existing.catches       + s.catches,
-          stumpings:     existing.stumpings     + s.stumpings,
-          runoutDirect:  existing.runoutDirect  + s.runoutDirect,
-          runoutIndirect:existing.runoutIndirect+ s.runoutIndirect,
-          playingXI:     s.playingXI || existing.playingXI,
-        };
-      }
-    }
-
-    const updated = updateScores(room.id, mapped);
     if (updated) {
       io.to(room.id).emit('room-state', updated);
       io.to(room.id).emit('leaderboard-update', buildLeaderboard(updated));
@@ -197,7 +173,7 @@ app.post('/api/rooms/:roomId/score-from-json', (req, res) => {
 
     return res.json({
       success: true,
-      message: `Loaded ${scorecard.batters.length} batters, ${scorecard.bowlers.length} bowlers. Leaderboard updated!`,
+      message: `Innings ${innings} loaded — ${scorecard.batters.length} batters, ${scorecard.bowlers.length} bowlers. Leaderboard updated!`,
     });
   } catch (e) {
     console.error('[json-score] parse error:', e);
