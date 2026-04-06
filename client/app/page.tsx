@@ -116,7 +116,7 @@ export default function HomePage() {
       const local: LocalUser = { userId: data.adminId, userName: createName, roomId: data.room.id, adminId: data.adminId };
       localStorage.setItem('fantasy_user', JSON.stringify(local));
       router.push(`/room/${data.room.id}`);
-    } catch { setError('Could not reach server. Is it running on port 4000?'); }
+    } catch (e: any) { setError(`Network error: ${e.message} (server: ${SERVER})`); }
     finally  { setLoading(false); }
   }
 
@@ -136,7 +136,7 @@ export default function HomePage() {
       const local: LocalUser = { userId: data.userId, userName: joinName, roomId: data.room.id };
       localStorage.setItem('fantasy_user', JSON.stringify(local));
       router.push(`/room/${data.room.id}`);
-    } catch { setError('Could not reach server. Is it running on port 4000?'); }
+    } catch (e: any) { setError(`Network error: ${e.message} (server: ${SERVER})`); }
     finally  { setLoading(false); }
   }
 

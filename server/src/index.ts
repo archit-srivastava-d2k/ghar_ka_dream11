@@ -25,7 +25,12 @@ const app        = express();
 const httpServer = createServer(app);
 const io         = new Server(httpServer, { cors: { origin: '*', methods: ['GET', 'POST'] } });
 
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+app.options('*', cors()); // handle preflight for all routes
 app.use(express.json());
 
 const PORT = process.env.PORT || 4000;
