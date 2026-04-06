@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { LocalUser, LiveMatch } from '@/lib/types';
 
-const SERVER = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:4000';
+const SERVER = process.env.NEXT_PUBLIC_SERVER_URL || 'https://gharkadream11-production.up.railway.app';
 const IPL_TEAMS = ['CSK','PBKS','MI','RCB','KKR','DC','RR','SRH','GT','LSG'];
 
 export default function HomePage() {

@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { getSocket } from '@/lib/socket';
 import { Room, Player, PlayerStats, LocalUser, emptyStats } from '@/lib/types';
 
-const SERVER = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:4000';
+const SERVER = process.env.NEXT_PUBLIC_SERVER_URL || 'https://gharkadream11-production.up.railway.app';
 
 function NumInput({ label, value, onChange, step = 1 }: { label: string; value: number; onChange: (v: number) => void; step?: number }) {
   return (

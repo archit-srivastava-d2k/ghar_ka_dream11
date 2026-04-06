@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { getSocket } from '@/lib/socket';
 import { Room, LocalUser } from '@/lib/types';
 
-const SERVER = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:4000';
+const SERVER = process.env.NEXT_PUBLIC_SERVER_URL || 'https://gharkadream11-production.up.railway.app';
 
 export default function RoomLobby() {
   const { roomId } = useParams<{ roomId: string }>();

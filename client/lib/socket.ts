@@ -1,6 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 
-const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:4000';
+const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'https://gharkadream11-production.up.railway.app';
 
 let socket: Socket | null = null;
 
